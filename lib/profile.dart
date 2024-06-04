@@ -6,6 +6,7 @@ import 'login_page.dart';
 import 'donateBlood_page.dart';
 import 'home_page.dart';
 import 'needBlood_page.dart';
+import 'otp_verification_page.dart'; // Import OTP Verification Page
 
 class UserProfilePage extends StatefulWidget {
   @override
@@ -93,6 +94,50 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
+  Future<void> _verifyAccount() async {
+    final response = await http.get(
+      Uri.parse('https://blood-donation-bd-backend.onrender.com/myapi?subscriberId=${_userData['contact_no']}'),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      if (responseData['statusCode'] == 'S1000') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OtpVerificationPage(
+              referenceNo: responseData['referenceNo'],
+            ),
+          ),
+        );
+      } else {
+        _showErrorMessage('Something error occurred');
+      }
+    } else {
+      _showErrorMessage('Failed to initiate verification');
+    }
+  }
+
+  void _showErrorMessage(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            ElevatedButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -150,7 +195,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
               leading: Icon(Icons.bloodtype),
               title: Text('Need Blood?'),
               onTap: () {
-                // Handle Need Blood option
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => NeedBloodPage()),
@@ -161,7 +205,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
               leading: Icon(Icons.volunteer_activism),
               title: Text('Donate Blood?'),
               onTap: () {
-                // Handle Donate Blood option
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => BloodDonorPage()),
@@ -172,7 +215,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
               leading: Icon(Icons.person),
               title: Text('Profile'),
               onTap: () {
-                // Handle Profile option
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => UserProfilePage()),
@@ -223,6 +265,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   _buildProfileRow('Donation Type', _userData['donation_type']),
                   _buildProfileRow('Disease', _userData['disease']),
                   _buildProfileRow('Password', '******', isPassword: true),
+                  SizedBox(height: 20),
+                  if (_userData['isVerified'] == true)
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.verified, color: Colors.lightGreen),
+                          SizedBox(width: 5),
+                          Text(
+                            'Verified',
+                            style: TextStyle(color: Colors.lightGreen, fontSize: 18),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _verifyAccount,
+                        child: Text('Verify your account'),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      ),
+                    ),
                 ],
               ),
             ),

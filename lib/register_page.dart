@@ -103,7 +103,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               TextFormField(
                 controller: _contactNoController,
-                decoration: InputDecoration(labelText: 'Contact Number'),
+                decoration: InputDecoration(labelText: 'Contact Number (Ex:8801000000000)'),
                 keyboardType: TextInputType.phone,
               ),
               TextFormField(
